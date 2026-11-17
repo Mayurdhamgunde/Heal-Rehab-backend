@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice {{invoice.invoice_number}}</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+        margin: 0;
+        background: #fff;
+      }
+
+      .invoice-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        background: #007b8e; /* theme green */
+        padding: 15px 20px;
+        color: #fff;
+        font-weight: bold;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 32px;
+        text-transform: uppercase;
+      }
+
+      .invoice-meta {
+        text-align: right;
+        font-size: 14px;
+      }
+
+      .invoice-meta div {
+        margin-bottom: 4px;
+      }
+
+      /* Status Badge */
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-left: 10px;
+      }
+
+      .status-paid {
+        background: #007b8e;
+        color: white;
+      }
+
+      .status-unpaid {
+        background: #f44336;
+        color: white;
+      }
+
+      .status-partially-paid {
+        background: #ff9800;
+        color: white;
+      }
+
+      .status-overdue {
+        background: #d32f2f;
+        color: white;
+      }
+
+      /* Info Section */
+      .info-section {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        align-items: flex-start;
+      }
+
+      .company,
+      .client {
+        width: 45%;
+      }
+
+      .company h3,
+      .client h3 {
+        margin-bottom: 8px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .company p,
+      .client p {
+        margin: 3px 0;
+      }
+
+      .company-logo {
+        max-width: 80px;
+        margin-bottom: 10px;
+      }
+
+      .logo-placeholder {
+        width: 80px;
+        height: 80px;
+        background: #e0e0e0;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      /* Items Table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+      }
+
+      table th {
+        background: #e8e8e8;
+        text-align: left;
+        padding: 10px;
+        font-weight: bold;
+      }
+
+      table td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      table td:nth-child(3),
+      table td:nth-child(4),
+      table td:nth-child(5) {
+        text-align: center;
+      }
+
+      /* Totals Section */
+      .totals {
+        max-width: 300px;
+        margin-left: auto;
+      }
+
+      .totals div {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+      }
+
+      .amount-due {
+        background: #007b8e;
+        color: #fff;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 10px;
+        text-align: center;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .amount-due.paid {
+        background: #007b8e;
+      }
+
+      .amount-due.overdue {
+        background: #f44336;
+      }
+
+      /* Payment History Section */
+      .payment-section {
+        margin-top: 40px;
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .payment-section h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 16px;
+        border-bottom: 2px solid #007b8e;
+        padding-bottom: 5px;
+      }
+
+      .payment-summary {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+
+      .payment-summary-item {
+        text-align: center;
+      }
+
+      .payment-summary-item .label {
+        font-size: 12px;
+        color: #666;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .payment-summary-item .value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        margin-top: 5px;
+      }
+
+      .payment-summary-item .value.paid {
+        color: #007b8e;
+      }
+
+      .payment-summary-item .value.due {
+        color: #f44336;
+      }
+
+      .payment-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #ddd;
+      }
+
+      .payment-history-table th {
+        background: #007b8e;
+        color: white;
+        padding: 12px 10px;
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .payment-history-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+      }
+
+      .payment-history-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .payment-history-table tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+
+      .payment-method {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .no-payments {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 20px;
+      }
+
+      /* Footer */
+      .footer {
+        margin-top: 40px;
+        font-size: 13px;
+        text-align: left;
+        color: #555;
+      }
+
+      /* Print styles */
+      @media print {
+        .invoice-container {
+          max-width: none;
+          padding: 10px;
+        }
+
+        .payment-section {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="invoice-container">
+      <!-- Header -->
+      <div class="header">
+        <div>
+          <h1>Invoice</h1>
+        </div>
+        <div class="invoice-meta">
+          <div><strong>Invoice No:</strong> {{invoice.invoice_number}}</div>
+          <div><strong>Invoice Date:</strong> {{invoice.invoice_date}}</div>
+          <div><strong>Due Date:</strong> {{invoice.due_date}}</div>
+          <div>
+            <strong>Status:</strong>
+            <span
+              class="status-badge {{#if (eq invoice.payment_status 'Paid')}}status-paid{{else if (eq invoice.payment_status 'Partially Paid')}}status-partially-paid{{else if (eq invoice.payment_status 'Overdue')}}status-overdue{{else}}status-unpaid{{/if}}"
+            >
+              {{invoice.payment_status}}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company & Client Info -->
+      <div class="info-section">
+        <div class="company">
+          {{#if organization.organization_logo}}
+          <img
+            src="{{organization.organization_logo}}"
+            alt="{{organization.organization_name}}"
+            class="company-logo"
+          />
+          {{else}}
+          <div class="logo-placeholder">Your Logo</div>
+          {{/if}}
+          <h3>Your Company</h3>
+          <p>{{organization.organization_name}}</p>
+          {{#if organization.organization_address_formatted}}
+          <p>{{organization.organization_address_formatted}}</p>
+          {{/if}} {{#if organization.organization_phone}}
+          <p>{{organization.organization_phone}}</p>
+          {{/if}} {{#if organization.organization_email}}
+          <p>{{organization.organization_email}}</p>
+          {{/if}}
+        </div>
+        <div class="client">
+          <h3>Billed To</h3>
+          <p>{{invoice.patient_name}}</p>
+          {{#if invoice.patient_address_formatted}}
+          <p>{{invoice.patient_address_formatted}}</p>
+          {{/if}} {{#if invoice.patient_phone}}
+          <p>{{invoice.patient_phone}}</p>
+          {{/if}} {{#if invoice.patient_email}}
+          <p>{{invoice.patient_email}}</p>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <table>
+        <thead>
+          <tr>
+            <th>Item No.</th>
+            <th>Product/Service</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each invoice.items}}
+          <tr>
+            <td>{{item_id}}</td>
+            <td>
+              <strong>{{item_name}}</strong>
+              {{#if description}}<br /><small style="color: #666"
+                >{{description}}</small
+              >{{/if}}
+            </td>
+            <td>{{quantity}}</td>
+            <td>{{rate}}</td>
+            <td>{{amount}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals">
+        <div><span>Subtotal</span><span>{{invoice.subtotal}}</span></div>
+        {{#if invoice.discount}}
+        <div><span>Discount</span><span>-{{invoice.discount}}</span></div>
+        {{/if}} {{#if invoice.tax}}
+        <div><span>Tax</span><span>{{invoice.tax}}</span></div>
+        {{/if}}
+        <div
+          class="amount-due {{#if (eq invoice.payment_status 'Paid')}}paid{{else if (eq invoice.payment_status 'Overdue')}}overdue{{/if}}"
+        >
+          {{#if (eq invoice.payment_status 'Paid')}} Amount Paid:
+          {{invoice.total_amount}} {{else}} Amount Due: {{invoice.total_amount}}
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Payment Information Section -->
+      {{#if invoice.payments_received}} {{#if (gt
+      invoice.payments_received.length 0)}}
+      <div class="payment-section">
+        <h3>Payment Information</h3>
+
+        <!-- Payment Summary -->
+        <div class="payment-summary">
+          <div class="payment-summary-item">
+            <div class="label">Invoice Total</div>
+            <div class="value">{{invoice.total_amount}}</div>
+          </div>
+          <div class="payment-summary-item">
+            <div class="label">Total Paid</div>
+            <div class="value paid">{{invoice.total_paid}}</div>
+          </div>
+          <div class="payment-summary-item">
+            <div class="label">Balance Due</div>
+            <div
+              class="value {{#if (gt invoice.balance_due 0)}}due{{else}}paid{{/if}}"
+            >
+              {{invoice.balance_due}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment History Table -->
+        <table class="payment-history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each invoice.payments_received}}
+            <tr>
+              <td>{{formatDate date}}</td>
+              <td><strong>{{formatCurrency amount}}</strong></td>
+              <td><span class="payment-method">{{method}}</span></td>
+              <td>{{reference}}</td>
+              <td>{{notes}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      {{/if}} {{/if}}
+
+      <!-- Notes Section -->
+      {{#if invoice.notes}}
+      <div
+        style="
+          margin-top: 30px;
+          padding: 15px;
+          background: #f9f9f9;
+          border-radius: 4px;
+        "
+      >
+        <h4 style="margin-top: 0; color: #333">Notes:</h4>
+        <p style="margin-bottom: 0; color: #666">{{invoice.notes}}</p>
+      </div>
+      {{/if}}
+
+      <!-- Terms and Conditions -->
+      {{#if invoice.terms_and_conditions}}
+      <div
+        style="
+          margin-top: 20px;
+          padding: 15px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        "
+      >
+        <h4 style="margin-top: 0; color: #333">Terms & Conditions:</h4>
+        <p style="margin-bottom: 0; font-size: 12px; color: #666">
+          {{invoice.terms_and_conditions}}
+        </p>
+      </div>
+      {{/if}}
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>Make all checks payable to {{organization.organization_name}}</p>
+        <p>
+          If you have any questions about this invoice, contact us at
+          {{organization.organization_email}} or
+          {{organization.organization_phone}}
+        </p>
+        {{#if (eq invoice.payment_status 'Paid')}}
+        <p style="color: #4caf50; font-weight: bold; margin-top: 15px">
+          ✓ This invoice has been paid in full. Thank you for your business!
+        </p>
+        {{else if (gt invoice.balance_due 0)}}
+        <p style="color: #f44336; font-weight: bold; margin-top: 15px">
+          Payment Terms: {{invoice.payment_terms}} {{#if invoice.due_date}} |
+          Due Date: {{invoice.due_date}} {{/if}}
+        </p>
+        {{/if}}
+      </div>
+    </div>
+  </body>
+</html>

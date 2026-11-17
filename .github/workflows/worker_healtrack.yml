@@ -1,0 +1,38 @@
+name: Build and deploy Node.js app to Azure Web App - healtrack
+
+on:
+  push:
+    branches:
+      - Worker
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy: # MERGED JOB
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.x"
+
+      # Install and Test (Azure handles the Build later)
+      - name: npm install and test
+        run: |
+          npm install
+          npm run test --if-present
+
+      # DEPLOY DIRECTLY (No upload-artifact needed!)
+      - name: "Deploy to Azure Web App"
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "healtrack"
+          slot-name: "Production"
+          # Since we are in the same job, the files are right here in the root (.)
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5874AF0DC89D4C8CA4DC47BAF281F949 }}

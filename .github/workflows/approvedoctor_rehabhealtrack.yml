@@ -1,0 +1,46 @@
+name: Build and deploy Node.js app to Azure Web App - rehabhealtrack
+
+on:
+  push:
+    branches:
+      - Rehab
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy: # Single job avoids using your billed 2GB artifact storage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "24.x"
+
+      # Build happens on GitHub's temporary runner
+      - name: npm install, build, and test
+        run: |
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+
+      # Zip the built project to send a ready-to-run package to Azure
+      - name: Zip application for deployment
+        run: zip -r release.zip . -x "*.git*"
+
+      # Deploy the zip file instead of the raw directory
+      - name: "Deploy to Azure Web App"
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "rehabhealtrack"
+          slot-name: "Production"
+          package: release.zip
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_10BF37E0A74E467A8E62F22E2D655B90 }}
+
+      # Explicitly delete the zip from the runner (Optional, as the runner is destroyed next anyway)
+      - name: Clean up local artifact
+        run: rm release.zip
